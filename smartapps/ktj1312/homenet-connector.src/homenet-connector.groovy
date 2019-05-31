@@ -383,10 +383,10 @@ CAPABILITY_MAP = [
 
 
 definition(
-    name: "HA Connector",
+    name: "HomeNet Connector",
     namespace: "ktj1312",
     author: "ktj1312",
-    description: "A Connector between HA and ST",
+    description: "A Connector between Homenet and ST",
     category: "My Apps",
     iconUrl: "https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/6/3/63f75921214e158bc02336dc864c096b11889f14.png",
     iconX2Url: "https://community-home-assistant-assets.s3.dualstack.us-west-2.amazonaws.com/original/3X/6/3/63f75921214e158bc02336dc864c096b11889f14.png",
