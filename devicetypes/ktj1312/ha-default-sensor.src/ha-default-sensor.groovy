@@ -19,7 +19,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "HA Default Sensor", namespace: "fison67", author: "fison67") {
+	definition (name: "HA Default Sensor", namespace: "ktj1312", author: "ktj1312") {
       	capability "Sensor"
         capability "Refresh"		
         

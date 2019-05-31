@@ -19,7 +19,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "HA White Light", namespace: "fison67", author: "fison67") {
+	definition (name: "HA White Light", namespace: "ktj1312", author: "ktj1312") {
         capability "Switch"						//"on", "off"
         capability "Light"
 		capability "Color Temperature"

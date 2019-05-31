@@ -19,7 +19,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "HA Switch", namespace: "fison67", author: "fison67") {
+	definition (name: "HA Switch", namespace: "ktj1312", author: "ktj1312") {
         capability "Switch"						//"on", "off"
         capability "Refresh"		
         
