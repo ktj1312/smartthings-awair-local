@@ -1,2 +1,2 @@
 # HA-Connector
-HA -> ST Connector
+Homenet -> ST Connector
