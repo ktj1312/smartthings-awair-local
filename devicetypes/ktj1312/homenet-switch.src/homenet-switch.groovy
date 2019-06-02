@@ -1,8 +1,8 @@
 /**
- *  HA Switch (v.0.0.1)
+ *  HomeNet Switch (v.0.0.1)
  *
  *  Authors
- *   - fison67@nate.com
+ *   - ktj1312@naver.com
  *  Copyright 2018
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -19,7 +19,7 @@
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "HA Switch", namespace: "ktj1312", author: "ktj1312") {
+	definition (name: "HomeNet Switch", namespace: "ktj1312", author: "ktj1312") {
         capability "Switch"						//"on", "off"
         capability "Refresh"		
         
@@ -117,7 +117,6 @@ def refresh(){
         "path": "/api/states/${state.entity_id}",
         "headers": [
         	"HOST": state.app_url,
-            "x-ha-access": state.app_pwd,
             "Content-Type": "application/json"
         ]
     ]
@@ -140,7 +139,6 @@ def commandToHA(cmd){
         "path": "/api/services/" + temp[0] + (cmd == "on" ? "/turn_on" : "/turn_off"),
         "headers": [
         	"HOST": state.app_url,
-            "x-ha-access": state.app_pwd,
             "Content-Type": "application/json"
         ],
         "body":[

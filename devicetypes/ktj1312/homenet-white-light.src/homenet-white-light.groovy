@@ -1,8 +1,8 @@
 /**
- *  HA White Light (v.0.0.1)
+ *  HomeNet White Light (v.0.0.1)
  *
  *  Authors
- *   - fison67@nate.com
+ *   - ktj1312@naver.com
  *  Copyright 2018
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -15,25 +15,25 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
- 
+
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "HA White Light", namespace: "ktj1312", author: "ktj1312") {
+    definition (name: "HomeNet White Light", namespace: "ktj1312", author: "ktj1312") {
         capability "Switch"						//"on", "off"
         capability "Light"
-		capability "Color Temperature"
+        capability "Color Temperature"
         capability "Switch Level"
         capability "Refresh"
-        
+
         attribute "lastCheckin", "Date"
-         
+
         command "setStatus"
-	}
-    
-	simulator {
-	}
-    
+    }
+
+    simulator {
+    }
+
     preferences {
         input name: "baseValue", title:"HA On Value" , type: "string", required: true, defaultValue: "on"
         input name: "baseBrightnessValue", title:"HA Brightness Param Value" , type: "string", required: true, defaultValue: "brightness_pct"
@@ -41,31 +41,31 @@ metadata {
         input name: "transitionSecond", title:"Transition Second" , type: "number", required: true, defaultValue: 3
         input name: "colorTempMin", title:"Color Temperature Min" , type: "number", required: true, defaultValue: 2700
         input name: "colorTempMax", title:"Color Temperature Max" , type: "number", required: true, defaultValue: 7500
-	}
+    }
 
-	tiles {
-		multiAttributeTile(name:"switch", type: "lighting", width: 6, height: 4){
-			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
+    tiles {
+        multiAttributeTile(name:"switch", type: "lighting", width: 6, height: 4){
+            tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
                 attributeState "on", label:'${name}', action:"switch.off", icon:"https://postfiles.pstatic.net/MjAxODAzMjdfNjgg/MDAxNTIyMTUzOTg0NzMx.YZwxpTpbz-9oqHVDLhcLyOcdWvn6TE0RPdpB_D7kWzwg.97WcX3XnDGPr5kATUZhhGRYJ1IO1MNV2pbDvg8DXruog.PNG.shin4299/Yeelight_tile_on.png?type=w580", backgroundColor:"#00a0dc", nextState:"turningOff"
                 attributeState "off", label:'${name}', action:"switch.on", icon:"https://postfiles.pstatic.net/MjAxODAzMjdfMTA0/MDAxNTIyMTUzOTg0NzIz.62-IbE4S7wAOxe3hufTJctU8mlQmrIUQztDaSTnf3kog.sxe2rqceUxFEPqrfYZ_DLkjxM5IPSotCqhErG87DI0Mg.PNG.shin4299/Yeelight_tile_off.png?type=w580", backgroundColor:"#ffffff", nextState:"turningOn"
-                
+
                 attributeState "turningOn", label:'${name}', action:"switch.off", icon:"https://postfiles.pstatic.net/MjAxODAzMjdfMTA0/MDAxNTIyMTUzOTg0NzIz.62-IbE4S7wAOxe3hufTJctU8mlQmrIUQztDaSTnf3kog.sxe2rqceUxFEPqrfYZ_DLkjxM5IPSotCqhErG87DI0Mg.PNG.shin4299/Yeelight_tile_off.png?type=w580", backgroundColor:"#00a0dc", nextState:"turningOff"
                 attributeState "turningOff", label:'${name}', action:"switch.ofn", icon:"https://postfiles.pstatic.net/MjAxODAzMjdfNjgg/MDAxNTIyMTUzOTg0NzMx.YZwxpTpbz-9oqHVDLhcLyOcdWvn6TE0RPdpB_D7kWzwg.97WcX3XnDGPr5kATUZhhGRYJ1IO1MNV2pbDvg8DXruog.PNG.shin4299/Yeelight_tile_on.png?type=w580", backgroundColor:"#ffffff", nextState:"turningOn"
-			}
-            
-            tileAttribute("device.lastCheckin", key: "SECONDARY_CONTROL") {
-    			attributeState("default", label:'Updated: ${currentValue}')
             }
-            
+
+            tileAttribute("device.lastCheckin", key: "SECONDARY_CONTROL") {
+                attributeState("default", label:'Updated: ${currentValue}')
+            }
+
             tileAttribute ("device.level", key: "SLIDER_CONTROL") {
                 attributeState "level", action:"switch level.setLevel"
             }
-		}
-        
-        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", range:"(2700..8000)", height: 1, width: 6) {
-			state "colorTemperature", action:"setColorTemperature"
         }
-        
+
+        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", range:"(2700..8000)", height: 1, width: 6) {
+            state "colorTemperature", action:"setColorTemperature"
+        }
+
         valueTile("lastOn_label", "", decoration: "flat") {
             state "default", label:'Last\nOn'
         }
@@ -75,7 +75,7 @@ metadata {
         standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
             state "default", label:"", action:"refresh", icon:"st.secondary.refresh"
         }
-        
+
         valueTile("lastOff_label", "", decoration: "flat") {
             state "default", label:'Last\nOff'
         }
@@ -85,32 +85,32 @@ metadata {
         valueTile("ha_url", "device.ha_url", width: 3, height: 1) {
             state "val", label:'${currentValue}', defaultState: true
         }
-        
+
         valueTile("entity_id", "device.entity_id", width: 3, height: 1) {
             state "val", label:'${currentValue}', defaultState: true
         }
-	}
+    }
 }
 
 // parse events into attributes
 def parse(String description) {
-	log.debug "Parsing '${description}'"
+    log.debug "Parsing '${description}'"
 }
 
 def setStatus(String value){
     if(state.entity_id == null){
-    	return
+        return
     }
-	log.debug "Status[${state.entity_id}] >> ${value}"
-    
+    log.debug "Status[${state.entity_id}] >> ${value}"
+
     def switchBaseValue = "on"
     if(baseValue){
-    	switchBaseValue = baseValue
+        switchBaseValue = baseValue
     }
-    
+
     def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
     def _value = (switchBaseValue == value ? "on" : "off")
-    
+
     if(device.currentValue("switch") != _value){
         sendEvent(name: (_value == "on" ? "lastOn" : "lastOff"), value: now, displayed: false )
     }
@@ -120,88 +120,86 @@ def setStatus(String value){
 }
 
 def setHASetting(url, password, deviceId){
-	state.app_url = url
+    state.app_url = url
     state.app_pwd = password
     state.entity_id = deviceId
-    
+
     sendEvent(name: "ha_url", value: state.app_url, displayed: false)
 }
 
 def refresh(){
-	log.debug "Refresh"
+    log.debug "Refresh"
     def options = [
-     	"method": "GET",
-        "path": "/api/states/${state.entity_id}",
-        "headers": [
-        	"HOST": state.app_url,
-            "x-ha-access": state.app_pwd,
-            "Content-Type": "application/json"
-        ]
+            "method": "GET",
+            "path": "/api/states/${state.entity_id}",
+            "headers": [
+                    "HOST": state.app_url,
+                    "Content-Type": "application/json"
+            ]
     ]
     sendCommand(options, callback)
 }
 
 def on(){
     def body = [
-        "entity_id":"${state.entity_id}"
+            "entity_id":"${state.entity_id}"
     ]
-	processCommand(getCommandStr("on"), body)
+    processCommand(getCommandStr("on"), body)
 }
 
 def off(){
     def body = [
-        "entity_id":"${state.entity_id}"
+            "entity_id":"${state.entity_id}"
     ]
-	processCommand(getCommandStr("off"), body)
+    processCommand(getCommandStr("off"), body)
 }
 
 def setColorTemperature(_temperature){
-	def temperature = _temperature
-   	def min = colorTempMin ? colorTempMin : 2700
+    def temperature = _temperature
+    def min = colorTempMin ? colorTempMin : 2700
     def max = colorTempMax ? colorTempMax : 7500
     if(min > temperature){
-    	temperature = min
+        temperature = min
     }
     if(max < temperature){
-    	temperature = max
+        temperature = max
     }
     def body = [
-        "entity_id":"${state.entity_id}",
-        (baseColorValue ? baseColorValue : "kelvin"): temperature
+            "entity_id":"${state.entity_id}",
+            (baseColorValue ? baseColorValue : "kelvin"): temperature
     ]
-	processCommand(getCommandStr("on"), body)
+    processCommand(getCommandStr("on"), body)
 }
 
 def setLevel(level){
-	def body = [
-        "entity_id":"${state.entity_id}",
-        (baseBrightnessValue ? baseBrightnessValue : "brightness_pct"): level
+    def body = [
+            "entity_id":"${state.entity_id}",
+            (baseBrightnessValue ? baseBrightnessValue : "brightness_pct"): level
     ]
-	processCommand(getCommandStr("on"), body)
+    processCommand(getCommandStr("on"), body)
 }
 
 def getCommandStr(cmd){
-	def command = cmd
+    def command = cmd
     if(cmd == "on"){
-    	command = cmdBaseOn ? cmdBaseOn : "turn_on"
+        command = cmdBaseOn ? cmdBaseOn : "turn_on"
     }else if(cmd == "off"){
-    	command = cmdBaseOff ? cmdBaseOff : "turn_off"
+        command = cmdBaseOff ? cmdBaseOff : "turn_off"
     }
     return command
 }
 
 def processCommand(command, body){
-	log.debug command + " : " + body
+    log.debug command + " : " + body
     def temp = state.entity_id.split("\\.")
     def options = [
-     	"method": "POST",
-        "path": "/api/services/" + temp[0] + "/" + command,
-        "headers": [
-        	"HOST": state.app_url,
-            "x-ha-access": state.app_pwd,
-            "Content-Type": "application/json"
-        ],
-        "body":body
+            "method": "POST",
+            "path": "/api/services/" + temp[0] + "/" + command,
+            "headers": [
+                    "HOST": state.app_url,
+                    "Content-Type": "application/json"
+            ],
+            "body":body
     ]
     log.debug options
     sendCommand(options, null)
@@ -210,8 +208,8 @@ def processCommand(command, body){
 def callback(physicalgraph.device.HubResponse hubResponse){
     try {
         def msg = parseLanMessage(hubResponse.description)
-		def jsonObj = new JsonSlurper().parseText(msg.body)
-        
+        def jsonObj = new JsonSlurper().parseText(msg.body)
+
         setStatus(jsonObj.state)
         sendEvent(name: "level", value: (jsonObj.attributes.brightness / 255 * 100) as int)
         log.debug jsonObj
@@ -224,6 +222,6 @@ def updated() {
 }
 
 def sendCommand(options, _callback){
-	def myhubAction = new physicalgraph.device.HubAction(options, null, [callback: _callback])
+    def myhubAction = new physicalgraph.device.HubAction(options, null, [callback: _callback])
     sendHubCommand(myhubAction)
 }
