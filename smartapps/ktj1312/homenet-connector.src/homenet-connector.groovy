@@ -422,7 +422,7 @@ def mainPage() {
 def haTypePage() {
     dynamicPage(name: "haTypePage", title: "Select a type", nextPage: "mainPage") {
         section("Configure HA API"){
-            input "haAddType", "enum", title: "type", required: true, options: ["Switch", "White Light"], defaultValue: "Default"
+            input "haAddType", "enum", title: "type", required: true, options: ["Switch", "Light"], defaultValue: "Default"
         }
     }
 }
