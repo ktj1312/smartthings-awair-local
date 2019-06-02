@@ -15,40 +15,40 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
- 
+
 import groovy.json.JsonSlurper
 
 metadata {
-	definition (name: "HomeNet Switch", namespace: "ktj1312", author: "ktj1312") {
+    definition (name: "HomeNet Switch", namespace: "ktj1312", author: "ktj1312") {
         capability "Switch"						//"on", "off"
-        capability "Refresh"		
-        
+        capability "Refresh"
+
         attribute "lastCheckin", "Date"
-         
+
         command "setStatus"
-	}
-    
-	simulator {
-	}
-    
+    }
+
+    simulator {
+    }
+
     preferences {
         input name: "baseValue", title:"HA On Value" , type: "string", required: true, defaultValue: "on"
-	}
+    }
 
-	tiles {
-		multiAttributeTile(name:"switch", type: "generic", width: 6, height: 4){
-			tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-				attributeState "on", label:'${name}', action:"off", icon:"st.switches.light.on", backgroundColor:"#00a0dc", nextState:"turningOff"
+    tiles {
+        multiAttributeTile(name:"switch", type: "generic", width: 6, height: 4){
+            tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
+                attributeState "on", label:'${name}', action:"off", icon:"st.switches.light.on", backgroundColor:"#00a0dc", nextState:"turningOff"
                 attributeState "off", label:'${name}', action:"on", icon:"st.switches.light.off", backgroundColor:"#ffffff", nextState:"turningOn"
-                
+
                 attributeState "turningOn", label:'${name}', action:"off", icon:"st.switches.light.on", backgroundColor:"#00a0dc", nextState:"turningOff"
                 attributeState "turningOff", label:'${name}', action:"on", icon:"st.switches.light.off", backgroundColor:"#ffffff", nextState:"turningOn"
-			}
-            tileAttribute("device.lastCheckin", key: "SECONDARY_CONTROL") {
-    			attributeState("default", label:'Last Update: ${currentValue}',icon: "st.Health & Wellness.health9")
             }
-		}
-        
+            tileAttribute("device.lastCheckin", key: "SECONDARY_CONTROL") {
+                attributeState("default", label:'Last Update: ${currentValue}',icon: "st.Health & Wellness.health9")
+            }
+        }
+
         valueTile("lastOn_label", "", decoration: "flat") {
             state "default", label:'Last\nOn'
         }
@@ -64,36 +64,36 @@ metadata {
         valueTile("lastOff", "device.lastOff", decoration: "flat", width: 3, height: 1) {
             state "default", label:'${currentValue}'
         }
-        
+
         valueTile("ha_url", "device.ha_url", width: 3, height: 1) {
             state "val", label:'${currentValue}', defaultState: true
         }
-        
+
         valueTile("entity_id", "device.entity_id", width: 3, height: 1) {
             state "val", label:'${currentValue}', defaultState: true
         }
-	}
+    }
 }
 
 // parse events into attributes
 def parse(String description) {
-	log.debug "Parsing '${description}'"
+    log.debug "Parsing '${description}'"
 }
 
 def setStatus(String value){
     if(state.entity_id == null){
-    	return
+        return
     }
-	log.debug "Status[${state.entity_id}] >> ${value}"
-    
+    log.debug "Status[${state.entity_id}] >> ${value}"
+
     def switchBaseValue = "on"
     if(baseValue){
-    	switchBaseValue = baseValue
+        switchBaseValue = baseValue
     }
-    
+
     def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
     def _value = (switchBaseValue == value ? "on" : "off")
-    
+
     if(device.currentValue("switch") != _value){
         sendEvent(name: (_value == "on" ? "lastOn" : "lastOff"), value: now, displayed: false )
     }
@@ -103,56 +103,56 @@ def setStatus(String value){
 }
 
 def setHASetting(url, password, deviceId){
-	state.app_url = url
+    state.app_url = url
     state.app_pwd = password
     state.entity_id = deviceId
-    
+
     sendEvent(name: "ha_url", value: state.app_url, displayed: false)
 }
 
 def refresh(){
-	log.debug "Refresh"
+    log.debug "Refresh"
     def options = [
-     	"method": "GET",
-        "path": "/api/states/${state.entity_id}",
-        "headers": [
-        	"HOST": state.app_url,
-            "Content-Type": "application/json"
-        ]
+            "method": "GET",
+            "path": "/api/states/${state.entity_id}",
+            "headers": [
+                    "HOST": state.app_url,
+                    "Content-Type": "application/json"
+            ]
     ]
     sendCommand(options, callback)
 }
 
 def on(){
-	commandToHA("on")
+    commandToHA("on")
 }
 
 def off(){
-	commandToHA("off")
+    commandToHA("off")
 }
 
 def commandToHA(cmd){
-	log.debug "Command[${state.entity_id}] >> ${cmd}"
+    log.debug "Command[${state.entity_id}] >> ${cmd}"
     def temp = state.entity_id.split("\\.")
     def options = [
-     	"method": "POST",
-        "path": "/api/services/" + temp[0] + (cmd == "on" ? "/turn_on" : "/turn_off"),
-        "headers": [
-        	"HOST": state.app_url,
-            "Content-Type": "application/json"
-        ],
-        "body":[
-        	"entity_id":"${state.entity_id}"
-        ]
+            "method": "POST",
+            "path": "/api/services/" + temp[0] + (cmd == "on" ? "/turn_on" : "/turn_off"),
+            "headers": [
+                    "HOST": state.app_url,
+                    "Content-Type": "application/json"
+            ],
+            "body":[
+                    "entity_id":"${state.entity_id}"
+            ]
     ]
     sendCommand(options, null)
 }
 
 def callback(physicalgraph.device.HubResponse hubResponse){
-	def msg
+    def msg
     try {
         msg = parseLanMessage(hubResponse.description)
-		def jsonObj = new JsonSlurper().parseText(msg.body)
+        def jsonObj = new JsonSlurper().parseText(msg.body)
         setStatus(jsonObj.state)
     } catch (e) {
         log.error "Exception caught while parsing data: "+e;
@@ -163,6 +163,6 @@ def updated() {
 }
 
 def sendCommand(options, _callback){
-	def myhubAction = new physicalgraph.device.HubAction(options, null, [callback: _callback])
+    def myhubAction = new physicalgraph.device.HubAction(options, null, [callback: _callback])
     sendHubCommand(myhubAction)
 }

@@ -404,7 +404,7 @@ preferences {
 
 
 def mainPage() {
-//    log.debug "Executing mainPage"
+    log.debug "Executing mainPage"
     dynamicPage(name: "mainPage", title: "HomeNet Manage", nextPage: null, uninstall: true, install: true) {
         section("Configure HomeNet API"){
             input "haAddress", "string", title: "HA address", required: true
@@ -458,10 +458,12 @@ def haAddDevicePage(){
     log.debug state.dataList
 
     state.dataList.each {
-        def entity_id = "${it.id}"
+        def entity_id = "${it.entity_id}"
         if(!addedDNIList.contains("ha-connector-" + entity_id)){
             if(entity_id.contains("light.") || entity_id.contains("switch.") || entity_id.contains("fan.") || entity_id.contains("cover.") || entity_id.contains("sensor.") || entity_id.contains("vacuum.") || entity_id.contains("device_tracker.") || entity_id.contains("climate.")){
+
                 list.push("${entity_id}")
+                log.debug list
             }
         }
     }
@@ -601,8 +603,11 @@ def getDeviceNames(devices) {
 }
 
 def getHADeviceByEntityId(entity_id){
+    log.debug entity_id
     def target
+    log.debug state.dataList
     state.dataList.each {haDevice ->
+
         if(haDevice.entity_id == entity_id){
             target = haDevice
         }
@@ -612,38 +617,26 @@ def getHADeviceByEntityId(entity_id){
 
 def addHAChildDevice(){
 //	String[] dth1_list = ["active", "inactive", "open", "closed", "dry", "wet", "clear", "detected", "not present", "present", "home", "not_home", "on", "off"]
-    log.debug settings.selectedAddHADevice
-    if(settings.selectedAddHADevice){
-        log.debug "selectedAddHADevice >> " + settings.selectedAddHADevice
-        if(settings.selectedAddHADevice != "None"){
-            log.debug "ADD >> " + settings.selectedAddHADevice
 
-            def tmp = settings.selectedAddHADevice.split(" \\[ ")
-            def tmp2 = tmp[1].split(" \\]")
-            def entity_id = tmp2[0]
+    if(settings.selectedAddHADevice){
+        if(settings.selectedAddHADevice != "None"){
+            def entity_id = settings.selectedAddHADevice
             def dni = "ha-connector-" + entity_id
-            log.debug "entity ID => " + entity_id
 
             def haDevice = getHADeviceByEntityId(entity_id)
 
-            log.debug "haDevice => " + haDevice
-
             if(haDevice){
-                def dth = "HA " + haAddType
-                def name = haDevice.attributes.friendly_name
-                if(!name){
-                    name = entity_id
-                }
+                def dth = "HomeNet " + haAddType
+                def name = entity_id
+
                 try{
                     def childDevice = addChildDevice("ktj1312", dth, dni, location.hubs[0].id, [
                             "label": name
                     ])
 
-                    childDevice.setHASetting(settings.haAddress, settings.haPassword, entity_id)
+                    childDevice.setHASetting(settings.haAddress, entity_id)
                     childDevice.setStatus(haDevice.state)
-                    if(haDevice.attributes.unit_of_measurement){
-                        childDevice.setUnitOfMeasurement(haDevice.attributes.unit_of_measurement)
-                    }
+
                     childDevice.refresh()
                 }catch(err){
                     log.error "Add HA Device ERROR >> ${err}"
@@ -729,165 +722,17 @@ def deviceAttributeList(device) {
     }
 }
 
-def updateDevice(){
-    def dni = "ha-connector-" + params.entity_id
-    try{
-        def device = getChildDevice(dni)
-        if(device){
-            log.debug "HA -> ST >> [${dni} : ${params.value}]"
-            device.setStatus(params.value)
-            if(params.unit){
-                device.setUnitOfMeasurement(params.unit)
-            }
-        }
-    }catch(err){
-        log.error "${err}"
-    }
-
-    def deviceJson = new groovy.json.JsonOutput().toJson([result: true])
-    render contentType: "application/json", data: deviceJson
-}
-
-def getSTDevices(){
-    def list = []
-    CAPABILITY_MAP.each { key, capability ->
-        capability["attributes"].each { attribute ->
-            if(settings[key]){
-                settings[key].each {device ->
-                    def obj = [:]
-                    obj["dni"] = device.deviceNetworkId
-                    obj["id"] = device.name
-                    obj["name"] = device.displayName
-                    obj["type"] = device.hasCommand("on") ? "switch" : "sensor"
-                    try{
-                        def theAtts = device.supportedAttributes
-                        def sList = []
-                        theAtts.each {att ->
-                            sList.push(att.name)
-                        }
-                        obj["attr"] = sList
-                    }catch(e){
-                    }
-
-                    def existSameDevice = False
-                    for ( item in list ) {
-                        if(item['dni'] == device.deviceNetworkId){
-                            existSameDevice = True
-                            break
-                        }
-                    }
-                    if(existSameDevice == False){
-                        list.push(obj)
-                    }
-                }
-            }
-        }
-    }
-    def deviceJson = new groovy.json.JsonOutput().toJson(list)
-    render contentType: "application/json", data: deviceJson
-}
-
-def getSTDevice(){
-    def status = null
-    def totalMap = [:]
-    def resultMap = [:]
-    CAPABILITY_MAP.each { key, capability ->
-        capability["attributes"].each { attribute ->
-            if(settings[key]){
-                settings[key].each {device ->
-                    def dni = device.deviceNetworkId
-                    if(dni == params.dni){
-                        totalMap["entity_id"] = "sensor.st_" + dni.toLowerCase()
-                        //          resultMap["friendly_name"] = device.displayName
-                        def theAtts = device.supportedAttributes
-                        theAtts.each {att ->
-                            def item = {}
-                            try{
-                                //  	if(existValueInList(attrList, att.name)){
-                                if(attrList.contains(att.name)){
-                                    if(status == null){
-                                        status = device.currentValue(att.name)
-                                    }
-                                }
-
-                                def _attr = "${att.name}State"
-                                def val = device."$_attr".value
-                                resultMap["${att.name}"] = val
-                            }catch(e){
-                                //  	log.error("${e}")
-                            }
-                        }
-                        //      log.debug "Switch:" + device.currentValue("switch")
-
-
-                    }
-                }
-            }
-        }
-    }
-
-    totalMap['state'] = status
-    totalMap['attributes'] = resultMap
-    def deviceJson = new groovy.json.JsonOutput().toJson(totalMap)
-//	log.debug "GET =======>>> ${params}, status: ${resultMap}"
-    render contentType: "application/json", data: deviceJson
-}
-
-def existValueInList(list, value){
-    for (item in list) {
-        if(item == value){
-            return True
-        }
-    }
-    return False
-}
-
-def updateSTDevice(){
-//	log.debug "POST >>>> param:${params}"
-    def state = "${params.turn}"
-    CAPABILITY_MAP.each { key, capability ->
-        capability["attributes"].each { attribute ->
-            if(settings[key]){
-                settings[key].each {device ->
-                    def dni = device.deviceNetworkId
-                    if(dni == params.dni){
-
-                        def theCommands = device.supportedCommands
-                        if(existValueInList(theCommands, "on") == True || existValueInList(theCommands, "off") == True){
-                            device."$params.turn"()
-                        }else if(existValueInList(theCommands, "lock") == True || existValueInList(theCommands, "unlock") == True){
-                            if(state == "on"){
-                                device.lock()
-                            }else{
-                                device.unlock()
-                            }
-                        }else if(existValueInList(theCommands, "lock") == True || existValueInList(theCommands, "unlock") == True){
-                            if(state == "on"){
-                                device.arrived()
-                            }else{
-                                device.departed();
-                            }
-                        }
-
-                    }
-                }
-            }
-        }
-    }
-    render contentType: "text/html", data: state
-}
-
 def authError() {
     [error: "Permission denied"]
 }
 
 def renderConfig() {
     def configJson = new groovy.json.JsonOutput().toJson([
-            description: "HA Connector API",
+            description: "HomeNet Connector API",
             platforms: [
                     [
-                            platform: "SmartThings HA Connector",
-                            name: "HA Connector",
+                            platform: "SmartThings HomeNet Connector",
+                            name: "HomeNet Connector",
                             app_url: apiServerUrl("/api/smartapps/installations/"),
                             app_id: app.id,
                             access_token:  state.accessToken
