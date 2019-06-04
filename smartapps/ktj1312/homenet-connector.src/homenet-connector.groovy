@@ -506,6 +506,8 @@ def installed() {
 }
 
 def stateChangeHandler(evt) {
+    log.debug evt
+
     def device = evt.getDevice()
     if(device){
         def type = device.hasCommand("on") ? "switch" : "sensor"
@@ -635,6 +637,7 @@ def addHAChildDevice(){
                     ])
 
                     childDevice.setHASetting(settings.haAddress, entity_id)
+                    log.debug haDevice
                     childDevice.setStatus(haDevice.state)
 
                     childDevice.refresh()
@@ -722,6 +725,30 @@ def deviceAttributeList(device) {
     }
 }
 
+def updateDevice(){
+    //log.debug "POST >>>> param:${params}"
+    //log.debug request.JSON.entity_id
+    def request = request.JSON
+    //def dni = "ha-connector-" + params.entity_id
+    def dni = "ha-connector-" + request.entity_id
+    log.debug dni
+    try{
+        def device = getChildDevice(dni)
+        if(device){
+            log.debug "HA -> ST >> [${dni} : ${request}]"
+            device.setStatus(request.state)
+            if(params.unit){
+                device.setUnitOfMeasurement(params.unit)
+            }
+        }
+    }catch(err){
+        log.error "${err}"
+    }
+
+    def deviceJson = new groovy.json.JsonOutput().toJson([result: true])
+    render contentType: "application/json", data: deviceJson
+}
+
 def authError() {
     [error: "Permission denied"]
 }
@@ -758,7 +785,7 @@ mappings {
 
     } else {
         path("/config")                         { action: [GET: "renderConfig"]  }
-        path("/update")                         { action: [GET: "updateDevice"]  }
+        path("/update")                         { action: [POST: "updateDevice"]  }
         path("/getSTDevices")                   { action: [GET: "getSTDevices"]  }
         path("/get") {
             action: [

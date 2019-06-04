@@ -1,5 +1,5 @@
 /**
- *  HomeNet Switch (v.0.0.1)
+ *  HomeNet Light (v.0.0.1)
  *
  *  Authors
  *   - ktj1312@naver.com
@@ -103,9 +103,8 @@ def setStatus(String value){
     sendEvent(name: "entity_id", value: state.entity_id, displayed: false)
 }
 
-def setHASetting(url, password, deviceId){
+def setHASetting(url, deviceId){
     state.app_url = url
-    state.app_pwd = password
     state.entity_id = deviceId
 
     sendEvent(name: "ha_url", value: state.app_url, displayed: false)
@@ -137,13 +136,15 @@ def commandToHA(cmd){
     def temp = state.entity_id.split("\\.")
     def options = [
             "method": "POST",
-            "path": "/api/services/" + temp[0] + (cmd == "on" ? "/turn_on" : "/turn_off"),
+            "path": "/api/states/" + state.entity_id,
             "headers": [
                     "HOST": state.app_url,
                     "Content-Type": "application/json"
             ],
             "body":[
-                    "entity_id":"${state.entity_id}"
+                    "entity_id":"${state.entity_id}",
+                    "device_id":"LIGHT",
+                    "state":cmd
             ]
     ]
     sendCommand(options, null)
