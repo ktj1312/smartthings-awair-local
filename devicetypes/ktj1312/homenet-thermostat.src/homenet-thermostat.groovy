@@ -20,9 +20,14 @@ import groovy.json.JsonSlurper
 
 metadata {
     definition (name: "HomeNet Thermostat", namespace: "ktj1312", author: "ktj1312") {
-        capability "Switch"						//"on", "off"
+        capability "Actuator"
+        capability "Temperature Measurement"
+        capability "Thermostat"
+        capability "Thermostat Mode"
+        capability "Thermostat Heating Setpoint"
+        capability "Thermostat Operating State"
+        capability "Sensor"
         capability "Refresh"
-        capability "Light"
 
         attribute "lastCheckin", "Date"
 
@@ -37,17 +42,35 @@ metadata {
     }
 
     tiles {
-        multiAttributeTile(name:"switch", type: "generic", width: 6, height: 4){
-            tileAttribute ("device.switch", key: "PRIMARY_CONTROL") {
-                attributeState "on", label:'${name}', action:"off", icon:"st.switches.light.on", backgroundColor:"#00a0dc", nextState:"turningOff"
-                attributeState "off", label:'${name}', action:"on", icon:"st.switches.light.off", backgroundColor:"#ffffff", nextState:"turningOn"
-
-                attributeState "turningOn", label:'${name}', action:"off", icon:"st.switches.light.on", backgroundColor:"#00a0dc", nextState:"turningOff"
-                attributeState "turningOff", label:'${name}', action:"on", icon:"st.switches.light.off", backgroundColor:"#ffffff", nextState:"turningOn"
+        multiAttributeTile(name:"temperature", type: "generic", width: 6, height: 4){
+            tileAttribute("device.temperature", key: "PRIMARY_CONTROL") {
+                attributeState("temperature", label:'${currentValue}°', icon: "st.alarm.temperature.normal",
+                        backgroundColors:[
+                                // Fahrenheit color set
+                                [value: 0, color: "#153591"],
+                                [value: 5, color: "#1e9cbb"],
+                                [value: 10, color: "#90d2a7"],
+                                [value: 15, color: "#44b621"],
+                                [value: 20, color: "#f1d801"],
+                                [value: 25, color: "#d04e00"],
+                                [value: 30, color: "#bc2323"],
+                                [value: 44, color: "#1e9cbb"],
+                                [value: 59, color: "#90d2a7"],
+                                [value: 74, color: "#44b621"],
+                                [value: 84, color: "#f1d801"],
+                                [value: 95, color: "#d04e00"],
+                                [value: 96, color: "#bc2323"]
+                                // Celsius color set (to switch, delete the 13 lines above anmd remove the two slashes at the beginning of the line below)
+                                //[value: 0, color: "#153591"], [value: 7, color: "#1e9cbb"], [value: 15, color: "#90d2a7"], [value: 23, color: "#44b621"], [value: 28, color: "#f1d801"], [value: 35, color: "#d04e00"], [value: 37, color: "#bc2323"]
+                        ]
+                )
             }
             tileAttribute("device.lastCheckin", key: "SECONDARY_CONTROL") {
                 attributeState("default", label:'Last Update: ${currentValue}',icon: "st.Health & Wellness.health9")
             }
+        }
+        valueTile("heatingSetpoint", "device.heatingSetpoint", width:2, height:1, inactiveLabel: false, decoration: "flat") {
+            state "heatingSetpoint", label:'${currentValue}° heat', backgroundColor:"#ffffff"
         }
 
         valueTile("lastOn_label", "", decoration: "flat") {
@@ -103,8 +126,9 @@ def setStatus(String value){
     sendEvent(name: "entity_id", value: state.entity_id, displayed: false)
 }
 
-def setHASetting(url, deviceId){
+def setHASetting(url, password, deviceId){
     state.app_url = url
+    state.app_pwd = password
     state.entity_id = deviceId
 
     sendEvent(name: "ha_url", value: state.app_url, displayed: false)
@@ -136,15 +160,13 @@ def commandToHA(cmd){
     def temp = state.entity_id.split("\\.")
     def options = [
             "method": "POST",
-            "path": "/api/states/" + state.entity_id,
+            "path": "/api/services/" + temp[0] + (cmd == "on" ? "/turn_on" : "/turn_off"),
             "headers": [
                     "HOST": state.app_url,
                     "Content-Type": "application/json"
             ],
             "body":[
-                    "entity_id":"${state.entity_id}",
-                    "device_id":"LIGHT",
-                    "state":cmd
+                    "entity_id":"${state.entity_id}"
             ]
     ]
     sendCommand(options, null)
