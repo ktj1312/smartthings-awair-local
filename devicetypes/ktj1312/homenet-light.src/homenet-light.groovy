@@ -81,7 +81,7 @@ def parse(String description) {
     log.debug "Parsing '${description}'"
 }
 
-def setStatus(String value){
+def setStatus(value){
     if(state.entity_id == null){
         return
     }
@@ -93,7 +93,7 @@ def setStatus(String value){
     }
 
     def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
-    def _value = (switchBaseValue == value ? "on" : "off")
+    def _value = (switchBaseValue == value.state ? "on" : "off")
 
     if(device.currentValue("switch") != _value){
         sendEvent(name: (_value == "on" ? "lastOn" : "lastOff"), value: now, displayed: false )

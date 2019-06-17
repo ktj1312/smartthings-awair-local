@@ -80,7 +80,7 @@ def parse(String description) {
     log.debug "Parsing '${description}'"
 }
 
-def setStatus(String value){
+def setStatus(value){
     if(state.entity_id == null){
         return
     }

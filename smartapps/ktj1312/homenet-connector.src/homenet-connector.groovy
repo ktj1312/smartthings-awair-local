@@ -736,7 +736,7 @@ def updateDevice(){
         def device = getChildDevice(dni)
         if(device){
             log.debug "HA -> ST >> [${dni} : ${request}]"
-            device.setStatus(request.state)
+            device.setStatus(request)
             if(params.unit){
                 device.setUnitOfMeasurement(params.unit)
             }
