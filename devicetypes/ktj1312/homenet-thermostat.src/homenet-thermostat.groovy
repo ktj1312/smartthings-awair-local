@@ -32,8 +32,7 @@ metadata {
 
         command "lowerHeatingSetpoint"
         command "raiseHeatingSetpoint"
-
-        //command "setStatus"
+        command "switchMode"
 
         attribute "thermostat", "string"
         attribute "maxHeatingSetpoint", "number"
@@ -84,10 +83,8 @@ metadata {
         }
         standardTile("mode", "device.thermostatMode", width:2, height:2, inactiveLabel: false, decoration: "flat") {
             state "off", action:"switchMode", nextState: "updating", icon: "st.thermostat.heating-cooling-off"
-            state "heat", action:"switchMode",  nextState: "updating", icon: "st.thermostat.heat"
-            state "cool", action:"switchMode",  nextState: "updating", icon: "st.thermostat.cool"
+            state "away", action:"switchMode",  nextState: "updating", icon: "st.thermostat.heat"
             state "auto", action:"switchMode",  nextState: "updating", icon: "st.thermostat.auto"
-            state "emergency heat", action:"switchMode", nextState: "updating", icon: "st.thermostat.emergency-heat"
             state "updating", label:"Updating...", icon: "st.secondary.secondary"
         }
         valueTile("thermostat", "device.thermostat", width:2, height:1, decoration: "flat") {
@@ -109,31 +106,32 @@ metadata {
 
 def off() { setThermostatMode("off") }
 
-def heat() { setThermostatMode("heat") }
+def away() { setThermostatMode("away") }
 
 def auto() { setThermostatMode("auto") }
 
-def setThermostatMode(String mode) {
+def switchMode() {
+    def currentMode = device.currentValue("thermostatMode")
+    def supportedModes = ["off","auto","away"]
+
+    def next = { supportedModes[supportedModes.indexOf(it) + 1] ?: supportedModes[0] }
+    def nextMode = next(currentMode)
+
+    def request = [
+            "command_type":"mode",
+            "state":nextMode
+    ]
+    commandToHA(request)
+}
+
+def generateModeEvent(mode) {
+    sendEvent(name: "thermostatMode", value: mode, data:["off","auto","away"],
+            isStateChange: true, descriptionText: "$device.displayName is in ${mode} mode")
+}
+
+def switchToMode(String mode) {
     log.debug "setThermostatMode($mode)"
-    def supportedModes = ["off","auto"]
-    generateModeEvent(mode,supportedModes)
-}
-
-def generateModeEvent(mode,supportedModes) {
-    sendEvent(
-            name: "thermostatMode",
-            value: mode,
-            data:[supportedThermostatModes: supportedModes ],
-            isStateChange: true,
-            descriptionText: "$device.displayName is in ${mode} mode")
-}
-
-def raiseHeatingSetpoint() {
-    alterSetpoint(true, "heatingSetpoint")
-}
-
-def lowerHeatingSetpoint() {
-    alterSetpoint(false, "heatingSetpoint")
+    generateModeEvent(mode)
 }
 
 // parse events into attributes
@@ -147,11 +145,9 @@ def setStatus(value){
     }
     log.debug "Status[${state.entity_id}] >> ${value}"
 
-    setThermostatMode(value.state)
-    //sendEvent(name: "device.switch", value:${value.state})
+    switchToMode(value.state)
     sendEvent(name: "heatingSetpoint", value: value.set_temp)
     sendEvent(name: "temperature", value: value.current_temp )
-
 }
 
 def setHASetting(url, deviceId){
@@ -162,13 +158,13 @@ def setHASetting(url, deviceId){
     sendEvent(name: "entity_id", value: state.entity_id, displayed: false)
 }
 
-def tempUp(){
+def raiseHeatingSetpoint() {
     int newSetpoint = device.currentValue("heatingSetpoint") + 1
     log.debug "Setting heat set point up to: ${newSetpoint}"
     setHeatingSetpoint(newSetpoint)
 }
 
-def tempDown(){
+def lowerHeatingSetpoint() {
     int newSetpoint = device.currentValue("heatingSetpoint") - 1
     log.debug "Setting heat set point down to: ${newSetpoint}"
     setHeatingSetpoint(newSetpoint)
@@ -181,7 +177,6 @@ def setHeatingSetpoint(temp) {
             "current_temp": device.currentValue("temperature"),
             "set_temp": temp
     ]
-
     commandToHA(request)
 }
 
