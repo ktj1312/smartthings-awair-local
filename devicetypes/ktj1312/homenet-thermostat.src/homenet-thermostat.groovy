@@ -81,14 +81,11 @@ metadata {
         standardTile("raiseHeatingSetpoint", "device.heatingSetpoint", width:2, height:1, inactiveLabel: false, decoration: "flat") {
             state "heatingSetpoint", action:"raiseHeatingSetpoint", icon:"st.thermostat.thermostat-right"
         }
-        standardTile("mode", "device.thermostatMode", width:2, height:2, inactiveLabel: false, decoration: "flat") {
+        standardTile("mode", "device.thermostatMode", width:2, height:2, inactiveLabel: flase , decoration: "flat") {
             state "off", action:"switchMode", nextState: "updating", icon: "st.thermostat.heating-cooling-off"
-            state "away", action:"switchMode",  nextState: "updating", icon: "st.thermostat.heat"
+            state "away", action:"switchMode",  nextState: "updating", icon: "http://cdn.onlinewebfonts.com/svg/img_458653.png"
             state "auto", action:"switchMode",  nextState: "updating", icon: "st.thermostat.auto"
             state "updating", label:"Updating...", icon: "st.secondary.secondary"
-        }
-        valueTile("thermostat", "device.thermostat", width:2, height:1, decoration: "flat") {
-            state "thermostat", label:'${currentValue}', backgroundColor:"#ffffff"
         }
         standardTile("refresh", "device.refresh", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
             state "default", label:"", action:"refresh", icon:"st.secondary.refresh"
@@ -117,6 +114,8 @@ def switchMode() {
     def next = { supportedModes[supportedModes.indexOf(it) + 1] ?: supportedModes[0] }
     def nextMode = next(currentMode)
 
+    log.debug "now ${currentMode} change to ${nextMode}"
+
     def request = [
             "command_type":"mode",
             "state":nextMode
@@ -125,8 +124,13 @@ def switchMode() {
 }
 
 def generateModeEvent(mode) {
-    sendEvent(name: "thermostatMode", value: mode, data:["off","auto","away"],
-            isStateChange: true, descriptionText: "$device.displayName is in ${mode} mode")
+    sendEvent(
+            name: "thermostatMode",
+            value: mode,
+            data:["off","auto","away"],
+            isStateChange: true,
+            descriptionText: "$device.displayName is in ${mode} mode")
+
 }
 
 def switchToMode(String mode) {
@@ -217,7 +221,6 @@ def commandToHA(command){
 
 def callback(physicalgraph.device.HubResponse hubResponse){
     def msg
-    log.debug msg
     try {
         msg = parseLanMessage(hubResponse.description)
         def jsonObj = new JsonSlurper().parseText(msg.body)
