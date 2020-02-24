@@ -132,7 +132,7 @@ def refresh() {
 }
 
 def pullData() {
-    log.debug "pullData() : ${device.deviceNetworkId}"
+    log.debug "pullData()"
 
     if(awairAddress){
 
