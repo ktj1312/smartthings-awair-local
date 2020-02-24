@@ -151,7 +151,9 @@ def pullData() {
             sendEvent(name: "fineDustLevel", value: resp.pm25)
             sendEvent(name: "illuminance", value: resp.lux)
             sendEvent(name: "soundPressureLevel", value: resp.spl_a)
-            sendEvent(name: "lastCheckin", value: new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone))
+
+            def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
+            sendEvent(name: "lastCheckin", value: now, displayed: false)
         }catch(e){
             log.error "failed to update $e"
         }
