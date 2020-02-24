@@ -137,8 +137,7 @@ def pullData() {
     if(awairAddress){
 
         def params = [
-            "uri" : "http://${awairAddress}",
-            "path" : "/air-data/latest",
+            "uri" : "http://${awairAddress}/air-data/latest",
             "contentType" : 'application/json'
         ]
         try{
