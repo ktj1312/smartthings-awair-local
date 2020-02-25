@@ -34,7 +34,7 @@ metadata {
     }
 
     preferences {
-        input "awairAddress", "text", type: "text", title: "어웨어 IP 주소", description: "어웨어 IP를 입력하세요", required: true
+        input "awairAddress", "text", type: "text", title: "어웨어 IP 주소", description: "enter awair address must be [ip]:[port] ", required: true
         input type: "paragraph", element: "paragraph", title: "Version", description: version(), displayDuringSetup: false
     }
 
@@ -96,7 +96,7 @@ metadata {
                 "lux_value",
                 "spl_value",
                 "refresh_air_value"
-            ])
+        ])
     }
 }
 
@@ -123,55 +123,48 @@ def updated() {
 
 def init(){
     refresh()
-    schedule("0 0/1 * * * ?", pullData)
+    schedule("0 0/1 * * * ?", refresh)
 }
 
 def refresh() {
     log.debug "refresh()"
-    pullData()
-}
-
-def pullData() {
-    log.debug "pullData()"
 
     if(awairAddress){
 
-        def params = [
-            "uri" : "http://${awairAddress}/air-data/latest",
-            "contentType" : 'application/json'
+        def options = [
+                "method": "GET",
+                "path": "/air-data/latest",
+                "headers": [
+                        "HOST": "${awairAddress}"
+                ]
         ]
-        try{
-            def resp = getHttpGetJson(params)
 
-            sendEvent(name: "airQuality", value: resp.score)
-            sendEvent(name: "temperature", value: resp.temp)
-            sendEvent(name: "humidity", value: resp.humid)
-            sendEvent(name: "tvocLevel", value: resp.voc)
-            sendEvent(name: "fineDustLevel", value: resp.pm25)
-            sendEvent(name: "illuminance", value: resp.lux)
-            sendEvent(name: "soundPressureLevel", value: resp.spl_a)
-
-            def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
-            sendEvent(name: "lastCheckin", value: now, displayed: false)
-        }catch(e){
-            log.error "failed to update $e"
-        }
+        def myhubAction = new physicalgraph.device.HubAction(options, null, [callback: responseCallback])
+        sendHubCommand(myhubAction)
     }
     else log.error "Missing settings awairAddress"
 }
 
-private getHttpGetJson(param) {
-    log.debug "getHttpGetJson>> params : ${param}"
-    def jsonMap = null
+def responseCallback(physicalgraph.device.HubResponse hubResponse){
+
+    def msg
     try {
-        httpGet(param) { resp ->
-            log.debug "getHttpGetJson>> resp: ${resp.data}"
-            jsonMap = resp.data
-        }
-    } catch(groovyx.net.http.HttpResponseException e) {
-        log.error "getHttpGetJson>> HTTP Get Error : ${e}"
+        msg = parseLanMessage(hubResponse.description)
+
+        def resp = new JsonSlurper().parseText(msg.body)
+
+        sendEvent(name: "airQuality", value: resp.score)
+        sendEvent(name: "temperature", value: resp.temp)
+        sendEvent(name: "humidity", value: resp.humid)
+        sendEvent(name: "carbonDioxide", value: resp.co2)
+        sendEvent(name: "tvocLevel", value: resp.voc)
+        sendEvent(name: "fineDustLevel", value: resp.pm25)
+        sendEvent(name: "illuminance", value: resp.lux)
+        sendEvent(name: "soundPressureLevel", value: resp.spl_a)
+
+        def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
+        sendEvent(name: "lastCheckin", value: now, displayed: false)
+    } catch (e) {
+        log.error "Exception caught while parsing data: "+e;
     }
-
-    return jsonMap
-
 }
