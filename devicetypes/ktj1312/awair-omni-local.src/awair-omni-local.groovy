@@ -207,8 +207,6 @@ def updateDeviceValues(physicalgraph.device.HubResponse hubResponse){
 
         def resp = new JsonSlurper().parseText(msg.body)
 
-        log.debug resp."power-status".battery
-
         sendEvent(name: "battery", value: resp."power-status".battery as Integer , unit: "%")
         sendEvent(name: "powerSource", value: resp."power-status".plugged ? "dc" : "battery")
 
