@@ -1,2 +1,2 @@
-# HA-Connector
-Homenet -> ST Connector
+# Smartthings Awair Local
+Smartthings <-> (LocalLAN) <-> Awair
