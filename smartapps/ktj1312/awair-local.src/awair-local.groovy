@@ -22,8 +22,8 @@ definition(
 
 preferences {
     page(name: "mainPage")
-    page(name: "addDevicePage")
     page(name: "typePage")
+    page(name: "addDevicePage")
     page(name: "deleteDevicePage")
 }
 
@@ -31,8 +31,8 @@ def mainPage() {
     log.debug "Executing mainPage"
     dynamicPage(name: "mainPage", title: "Awair Manage", nextPage: null, uninstall: true, install: true) {
         section("Configure Awair API"){
-            href "addDevicePage", title: "Add HA Device", description:""
-            href "deleteDevicePage", title: "Delete HA Device", description:""
+            href "addDevicePage", title: "Add Awair Device", description:""
+            href "deleteDevicePage", title: "Delete Awair Device", description:""
         }
     }
 }
@@ -92,6 +92,7 @@ def deleteDevicePage(){
     }
 }
 
+
 def installed() {
     log.debug "Installed with settings: ${settings}"
 
@@ -100,6 +101,19 @@ def installed() {
     app.updateSetting("selectedAddAwairDevice", "None")
     app.updateSetting("selectedDeleteAwairDevice", "None")
 }
+
+def updated() {
+    log.debug "updated()"
+}
+
+def initialize() {
+    log.debug "initialize"
+
+    deleteChildDevice()
+    addAwairChildDevice()
+
+}
+
 
 def addAwairChildDevice(){
 
@@ -160,11 +174,4 @@ def getAwairDeviceByEntityId(entity_id){
     target
 }
 
-def initialize() {
-    log.debug "initialize"
-
-    deleteChildDevice()
-    addAwairChildDevice()
-
-}
 
