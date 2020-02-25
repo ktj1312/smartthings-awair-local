@@ -19,7 +19,7 @@ import groovy.json.*
 import groovy.json.JsonSlurper
 
 metadata {
-    definition(name: "Awair-Omni-Local", namespace: "ktj1312", author: "ktj1312", vid: "SmartThings-Awair-Local", ocfDeviceType: "x.com.st.d.airqualitysensor") {
+    definition(name: "Awair-Other-Local", namespace: "ktj1312", author: "ktj1312", vid: "SmartThings-Awair-Local", ocfDeviceType: "x.com.st.d.airqualitysensor") {
         capability "Air Quality Sensor" // Awair Score
         capability "Carbon Dioxide Measurement" // co : clear, detected
         capability "Fine Dust Sensor"
@@ -28,8 +28,6 @@ metadata {
         capability "Tvoc Measurement"
         capability "Illuminance Measurement"
         capability "Sound Pressure Level"
-        capability "Battery"
-        capability "Power Source"
         capability "Sensor"
 
         command "refresh"
@@ -83,15 +81,6 @@ metadata {
             state "default", label: '${currentValue}', unit: "db"
         }
 
-        valueTile("battery", "device.battery", decoration: "flat") {
-            state "default", label: '${currentValue}%'
-        }
-
-        valueTile("powerSource", "device.powerSource", decoration: "flat") {
-            state "dc", label: "Plugged"
-            state "battery", label: "Battery"
-        }
-
         standardTile("refresh_air_value", "", width: 1, height: 1, decoration: "flat") {
             state "default", label: "", action: "refresh", icon: "st.secondary.refresh"
         }
@@ -106,8 +95,6 @@ metadata {
                 "pm25_value",
                 "lux_value",
                 "spl_value",
-                "powerSource",
-                "battery",
                 "refresh_air_value"
         ])
     }
@@ -144,7 +131,6 @@ def refresh() {
 
     if(awairAddress){
         updateAirData()
-        updateDeviceData()
         def now = new Date().format("yyyy-MM-dd HH:mm:ss", location.timeZone)
         sendEvent(name: "lastCheckin", value: now, displayed: false)
     }
@@ -164,19 +150,6 @@ def updateAirData(){
     sendHubCommand(myhubAction)
 }
 
-def updateDeviceData(){
-    def options = [
-            "method": "GET",
-            "path": "/settings/config/data",
-            "headers": [
-                    "HOST": "${awairAddress}"
-            ]
-    ]
-
-    def myhubAction = new physicalgraph.device.HubAction(options, null, [callback: updateDeviceValues])
-    sendHubCommand(myhubAction)
-}
-
 def updateAirdataValues(physicalgraph.device.HubResponse hubResponse){
 
     def msg
@@ -193,24 +166,6 @@ def updateAirdataValues(physicalgraph.device.HubResponse hubResponse){
         sendEvent(name: "fineDustLevel", value: resp.pm25)
         sendEvent(name: "illuminance", value: resp.lux)
         sendEvent(name: "soundPressureLevel", value: resp.spl_a)
-
-    } catch (e) {
-        log.error "Exception caught while parsing data: "+e;
-    }
-}
-
-def updateDeviceValues(physicalgraph.device.HubResponse hubResponse){
-
-    def msg
-    try {
-        msg = parseLanMessage(hubResponse.description)
-
-        def resp = new JsonSlurper().parseText(msg.body)
-
-        log.debug resp."power-status".battery
-
-        sendEvent(name: "battery", value: resp."power-status".battery as Integer , unit: "%")
-        sendEvent(name: "powerSource", value: resp."power-status".plugged ? "dc" : "battery")
 
     } catch (e) {
         log.error "Exception caught while parsing data: "+e;
