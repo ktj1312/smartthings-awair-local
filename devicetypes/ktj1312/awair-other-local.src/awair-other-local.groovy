@@ -26,8 +26,6 @@ metadata {
         capability "Temperature Measurement"
         capability "Relative Humidity Measurement"
         capability "Tvoc Measurement"
-        capability "Illuminance Measurement"
-        capability "Sound Pressure Level"
         capability "Sensor"
 
         command "refresh"
@@ -73,14 +71,6 @@ metadata {
             state "default", label: '${currentValue}', unit: "㎍/㎥"
         }
 
-        valueTile("lux_value", "device.illuminance", decoration: "flat") {
-            state "default", label: '${currentValue}'
-        }
-
-        valueTile("spl_value", "device.soundPressureLevel", decoration: "flat") {
-            state "default", label: '${currentValue}', unit: "db"
-        }
-
         standardTile("refresh_air_value", "", width: 1, height: 1, decoration: "flat") {
             state "default", label: "", action: "refresh", icon: "st.secondary.refresh"
         }
@@ -93,8 +83,6 @@ metadata {
                 "co2_value",
                 "voc_value",
                 "pm25_value",
-                "lux_value",
-                "spl_value",
                 "refresh_air_value"
         ])
     }
@@ -164,8 +152,6 @@ def updateAirdataValues(physicalgraph.device.HubResponse hubResponse){
         sendEvent(name: "carbonDioxide", value: resp.co2)
         sendEvent(name: "tvocLevel", value: resp.voc)
         sendEvent(name: "fineDustLevel", value: resp.pm25)
-        sendEvent(name: "illuminance", value: resp.lux)
-        sendEvent(name: "soundPressureLevel", value: resp.spl_a)
 
     } catch (e) {
         log.error "Exception caught while parsing data: "+e;
