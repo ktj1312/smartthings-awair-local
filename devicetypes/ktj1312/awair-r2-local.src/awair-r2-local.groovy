@@ -111,7 +111,8 @@ def updated() {
 
 def init(){
     refresh()
-    schedule("0 0/1 * * * ?", refresh)
+    //schedule("0 0/1 * * * ?", refresh)
+    runEvery1Minute(refresh)
 }
 
 def refresh() {
