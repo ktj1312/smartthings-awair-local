@@ -19,7 +19,7 @@ import groovy.json.*
 import groovy.json.JsonSlurper
 
 metadata {
-    definition(name: "Awair-Other-Local", namespace: "ktj1312", author: "ktj1312", vid: "SmartThings-Awair-Local", ocfDeviceType: "x.com.st.d.airqualitysensor") {
+    definition(name: "Awair-R2-Local", namespace: "ktj1312", author: "ktj1312", vid: "SmartThings-Awair-Local", ocfDeviceType: "x.com.st.d.airqualitysensor") {
         capability "Air Quality Sensor" // Awair Score
         capability "Carbon Dioxide Measurement" // co : clear, detected
         capability "Fine Dust Sensor"
