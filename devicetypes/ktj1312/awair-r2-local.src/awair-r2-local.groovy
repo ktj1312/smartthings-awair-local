@@ -11,9 +11,10 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
-public static String version() { return "v0.0.1.20200224" }
+public static String version() { return "v0.0.2.20200523" }
 /*
  *   2020/02/24 >>> v0.0.1.20200224 - Initialize
+ *   2020/05/23 >>> v0.0.2.20200523 - Add sendEvent Displayed option
  */
 import groovy.json.*
 import groovy.json.JsonSlurper
